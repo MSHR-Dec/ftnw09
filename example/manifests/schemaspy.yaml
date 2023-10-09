@@ -1,0 +1,117 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: schemaspy
+  labels:
+    app: schemaspy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: schemaspy
+  template:
+    metadata:
+      labels:
+        app: schemaspy
+    spec:
+      initContainers:
+        - name: schemaspy
+          image: schemaspy:latest
+          imagePullPolicy: IfNotPresent
+          command:
+            - java
+            - -jar
+            - schemaspy.jar
+            - -configFile
+            - /schemaspy.properties
+          volumeMounts:
+            - mountPath: /schemaspy.properties
+              name: properties
+              subPath: schemaspy.properties
+            - mountPath: /schema
+              name: output
+      containers:
+        - name: nginx
+          image: nginx:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - mountPath: /usr/share/nginx/html
+              name: output
+      volumes:
+        - name: properties
+          configMap:
+            name: schemaspy
+        - name: output
+          emptyDir: {}
+---
+#apiVersion: batch/v1
+#kind: Job
+#metadata:
+#  name: schemaspy
+#spec:
+#  template:
+#    spec:
+#      containers:
+#        - name: schemaspy
+#          image: schemaspy:latest
+#          imagePullPolicy: IfNotPresent
+#          command:
+#            - java
+#            - -jar
+#            - schemaspy.jar
+#            - -t
+#            - mysql
+#            - -dp
+#            - /app/mysql-connector-java.jar
+#            - -db
+#            - r2y
+#            - -s
+#            - r2y
+#            - -host
+#            - host.docker.internal
+#            - -port
+#            - "53306"
+#            - -u
+#            - r2y
+#            - -p
+#            - r2y
+#            - -o
+#            - ./output
+#          volumeMounts:
+#            - mountPath: /schemaspy.properties
+#              name: properties
+#      volumes:
+#        - name: properties
+#          configMap:
+#            name: schemaspy
+#      restartPolicy: Never
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: schemaspy
+data:
+  schemaspy.properties: |
+    schemaspy.t=mysql
+    schemaspy.dp=/app/mysql-connector-java.jar
+    schemaspy.host=host.docker.internal
+    schemaspy.port=53306
+    schemaspy.db=r2y
+    schemaspy.s=r2y
+    schemaspy.u=r2y
+    schemaspy.p=r2y
+    schemaspy.o=/schema
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: schemaspy
+spec:
+  selector:
+    app: schemaspy
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80

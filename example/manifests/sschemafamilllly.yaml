@@ -1,0 +1,16 @@
+apiVersion: mshr.whisffee.net/v1
+kind: SSpyFamilllly
+metadata:
+  labels:
+    "app.kubernetes.io/name": "sspyfamilllly"
+    "app.kubernetes.io/component": "ops"
+    "app.kubernetes.io/part-of": "migration"
+  name: sspyfamilllly
+spec:
+  dbHost: host.docker.internal
+  dbPort: 53306
+  dbUser: r2y
+  dbPassword: r2y
+  sourceDatabase: r2y
+  sourceTable: r2y
+  targetDatabase: r2y
